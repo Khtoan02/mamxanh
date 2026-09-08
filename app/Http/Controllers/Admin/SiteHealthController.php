@@ -35,7 +35,8 @@ use Illuminate\Support\Facades\Storage;
  * a spec item needs infrastructure this app doesn't have (uptime
  * monitoring, Lighthouse/PageSpeed, GSC index counts, rage-click
  * tracking), it's either approximated honestly or omitted rather than
- * faked — see [[project_mamxanhdigital_cms]] for the scoping decisions.
+ * faked. A health dashboard that invents a number is worse than one that
+ * admits it cannot measure something.
  */
 class SiteHealthController extends Controller
 {

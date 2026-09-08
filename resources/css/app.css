@@ -16,9 +16,10 @@
 @source '../../content/plugins/**/*.blade.php';
 
 /*
- * Design tokens — minimalist shadcn/ui token system, brand colors pulled
- * from mamxanhdigital.vn (orange #f97316 primary, green #2e7d32 as the
- * spot brand accent, Nunito/Mulish type pairing).
+ * Design tokens — minimalist shadcn/ui token system. Bảng màu mặc định
+ * lấy cam #f97316 làm màu chính và xanh lá #2e7d32 làm màu nhấn. Đổi màu
+ * cho site của bạn chỉ cần sửa các biến trong khối :root và khối dark mode
+ * bên dưới — không chỗ nào khác trong CMS viết cứng mã màu.
  */
 :root {
     --background: #ffffff;
@@ -107,8 +108,8 @@
  * thật) + Be Vietnam Pro (nội dung/UI — sans hiện đại của 1 foundry Việt
  * Nam, chọn có chủ đích vì đây là thương hiệu Việt, không phải font "an
  * toàn" kiểu Inter). Nền tông xanh-xám rất nhạt (không phải cream — cream
- * + cam dễ rơi vào công thức thiết kế AI hay dùng) — gắn với tên thương
- * hiệu "Mầm Xanh" thay vì trung tính vô cảm.
+ * + cam dễ rơi vào công thức thiết kế AI hay dùng) — có sắc thái riêng
+ * thay vì xám trung tính vô cảm.
  */
 /* Chặn tràn ngang do các section tràn viền: `100vw` TÍNH CẢ chiều rộng
    thanh cuộn dọc, nên trên desktop có thanh cuộn thì section rộng hơn vùng

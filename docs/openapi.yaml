@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: mamxanhdigital API
+  title: MXD CMS API
   version: "0.1.0"
   description: >
     Contract published by the BA/Architect team and consumed by the frontend
@@ -30,7 +30,7 @@ components:
     sanctumCookie:
       type: apiKey
       in: cookie
-      name: mamxanhdigital_session
+      name: mxd_cms_session   # Laravel sinh từ APP_NAME nên tên thật khác nhau ở mỗi bản cài
   schemas:
     User:
       type: object

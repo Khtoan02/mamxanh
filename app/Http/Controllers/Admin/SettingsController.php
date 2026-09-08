@@ -19,8 +19,9 @@ use Illuminate\Support\Facades\Mail;
  * options-general.php/options-writing.php/... split) rather than a single
  * flat page. Short, single-line values live in `.env` (via
  * EnvironmentWriter, consistent with the fields already there); only the
- * free-form/multi-line custom scripts live in the `settings` table — see
- * [[project_mamxanhdigital_cms]] for why that split exists.
+ * free-form/multi-line custom scripts live in the `settings` table. The
+ * split exists because .env is a line-oriented format: a multi-line
+ * tracking snippet written into it would corrupt every key after it.
  */
 class SettingsController extends Controller
 {

@@ -10,9 +10,11 @@ use ZipArchive;
 
 /**
  * Real database + uploaded-media backups, stored locally on the same
- * server (no S3/off-site target configured yet — see [[project_mamxanhdigital_cms]]
- * for the tradeoff). Retention keeps only the last KEEP_COUNT archives so
- * disk usage doesn't grow unbounded.
+ * server. There is deliberately no S3/off-site target yet: the point of
+ * this CMS is that it runs on ordinary shared hosting, and a required
+ * cloud credential would be one more thing to configure before the very
+ * first backup can happen. Retention keeps only the last KEEP_COUNT
+ * archives so disk usage doesn't grow unbounded.
  */
 class BackupService
 {
