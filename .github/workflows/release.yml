@@ -88,6 +88,14 @@ jobs:
             --exclude 'content/plugins/*' \
             --exclude 'content/uploads/*'
 
+          # Cùng lý do như trong scripts/publish-core.sh: các thư mục storage
+          # rỗng phải tồn tại thì Laravel mới chạy, mà mẫu loại trừ ở trên
+          # xoá luôn file .gitignore giữ chúng. Thiếu là 500 ở mọi trang.
+          for d in app/public app/private framework/cache/data framework/sessions framework/testing framework/views logs; do
+            mkdir -p "dist/$DIR/storage/$d"
+            printf '*\n!.gitignore\n' > "dist/$DIR/storage/$d/.gitignore"
+          done
+
           # Giữ lại khung content/ rỗng cho người cài đặt
           mkdir -p "dist/$DIR/content/themes" "dist/$DIR/content/plugins" "dist/$DIR/content/uploads"
           touch "dist/$DIR/content/themes/.gitkeep" "dist/$DIR/content/plugins/.gitkeep" "dist/$DIR/content/uploads/.gitkeep"
@@ -101,6 +109,9 @@ jobs:
           done
           for f in .env storage/app/install.lock; do
             test ! -e "dist/$DIR/$f" || { echo "::error::$f LỌT vào bản phát hành"; exit 1; }
+          done
+          for d in framework/sessions framework/views framework/cache/data logs; do
+            test -d "dist/$DIR/storage/$d" || { echo "::error::Thiếu storage/$d — bản phát hành sẽ 500 ở mọi trang"; exit 1; }
           done
 
           cd dist && zip -rq "$DIR.zip" "$DIR"
