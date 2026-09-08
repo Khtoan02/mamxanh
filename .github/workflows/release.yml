@@ -1,0 +1,128 @@
+name: Đóng gói bản phát hành
+
+# Chạy khi đẩy tag dạng v1.0.0. Sản phẩm là một file .zip tải về là cài được:
+# đã kèm vendor/ và CSS/JS biên dịch, nên người dùng cuối không cần composer,
+# không cần Node.js, không cần dòng lệnh nào.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Đọc phiên bản từ config/mxd.php
+        id: ver
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          CFG=$(php -r 'echo (require "config/mxd.php")["version"];')
+          echo "Tag: $TAG | config/mxd.php: $CFG"
+          # Lệch phiên bản là lỗi thật: người dùng sẽ tải về file tên 1.1.0
+          # nhưng màn hình quản trị báo 1.0.0, và mọi kiểm tra cập nhật sau
+          # này đều sai. Dừng sớm còn hơn phát hành nhầm.
+          if [ "$GITHUB_REF_NAME" != "manual" ] && [ "$TAG" != "$CFG" ]; then
+            echo "::error::Tag ($TAG) không khớp version trong config/mxd.php ($CFG)"
+            exit 1
+          fi
+          echo "version=$CFG" >> "$GITHUB_OUTPUT"
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: pdo_mysql, mbstring, curl, openssl, zip, xml, gd
+          coverage: none
+
+      - name: Cài thư viện PHP (bản chạy thật, không kèm gói dev)
+        working-directory: .
+        run: composer install --no-dev --optimize-autoloader --no-interaction --no-progress
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Biên dịch CSS/JS
+        working-directory: .
+        run: |
+          npm ci
+          npm run build
+
+      - name: Dựng cây thư mục bản phát hành
+        id: pack
+        env:
+          VERSION: ${{ steps.ver.outputs.version }}
+        run: |
+          set -euo pipefail
+          DIR="mxd-cms-${VERSION}"
+          mkdir -p "dist/$DIR"
+
+          # Gốc bản phát hành CHÍNH LÀ thư mục Laravel — người dùng cuối không
+          # cần biết tới tầng backend/ của repo.
+          # Gốc repo NÀY chính là gốc Laravel (khác repo phát triển mxd, nơi
+          # mã nguồn nằm trong backend/). Phải loại dist/ ra khỏi rsync nếu
+          # không nó sẽ tự chép vào chính nó.
+          rsync -a ./ "dist/$DIR/" \
+            --exclude dist \
+            --exclude .git \
+            --exclude .github \
+            --exclude node_modules \
+            --exclude tests \
+            --exclude .git \
+            --exclude .env \
+            --exclude .phpunit.result.cache \
+            --exclude 'storage/logs/*.log' \
+            --exclude 'storage/framework/cache/data/*' \
+            --exclude 'storage/framework/sessions/*' \
+            --exclude 'storage/framework/views/*' \
+            --exclude 'storage/app/install.lock' \
+            --exclude 'public/storage' \
+            --exclude 'content/themes/*' \
+            --exclude 'content/plugins/*' \
+            --exclude 'content/uploads/*'
+
+          # Giữ lại khung content/ rỗng cho người cài đặt
+          mkdir -p "dist/$DIR/content/themes" "dist/$DIR/content/plugins" "dist/$DIR/content/uploads"
+          touch "dist/$DIR/content/themes/.gitkeep" "dist/$DIR/content/plugins/.gitkeep" "dist/$DIR/content/uploads/.gitkeep"
+
+          # Kiểm tra chặn: thiếu một trong những thứ này thì bản phát hành hỏng
+          # theo kiểu chỉ lộ ra khi người dùng đã tải về. Đã gặp thật cả hai:
+          # thiếu public/build thì Vite ném lỗi ở MỌI trang kể cả /install;
+          # lọt .env thì rò rỉ mật khẩu CSDL của chính máy build.
+          for f in public/build/manifest.json vendor/autoload.php .env.example index.php .htaccess; do
+            test -e "dist/$DIR/$f" || { echo "::error::Thiếu $f trong bản phát hành"; exit 1; }
+          done
+          for f in .env storage/app/install.lock; do
+            test ! -e "dist/$DIR/$f" || { echo "::error::$f LỌT vào bản phát hành"; exit 1; }
+          done
+
+          cd dist && zip -rq "$DIR.zip" "$DIR"
+          sha256sum "$DIR.zip" > "$DIR.zip.sha256"
+          echo "zip=dist/$DIR.zip" >> "$GITHUB_OUTPUT"
+          ls -lh "$DIR.zip"
+
+      - name: Tạo GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.ver.outputs.version }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            "dist/mxd-cms-${VERSION}.zip" \
+            "dist/mxd-cms-${VERSION}.zip.sha256" \
+            --title "MXD CMS $VERSION" \
+            --notes "Tải file \`mxd-cms-${VERSION}.zip\`, giải nén lên hosting rồi mở tên miền trên trình duyệt — trình cài đặt sẽ tự hiện ra. Không cần composer, không cần Node.js, không cần dòng lệnh.
+
+          Chi tiết thay đổi: [CHANGELOG.md](https://github.com/${GITHUB_REPOSITORY}/blob/${GITHUB_REF_NAME}/CHANGELOG.md)"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mxd-cms-${{ steps.ver.outputs.version }}
+          path: ${{ steps.pack.outputs.zip }}

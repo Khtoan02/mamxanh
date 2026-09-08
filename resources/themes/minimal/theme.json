@@ -1,0 +1,6 @@
+{
+    "slug": "minimal",
+    "name": "Tối giản (Card)",
+    "parent": "default",
+    "description": "Child theme của Mặc định — chỉ ghi đè trang danh sách bài viết sang dạng lưới thẻ (card grid), thừa kế layout và trang chi tiết từ theme cha."
+}

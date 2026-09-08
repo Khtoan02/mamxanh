@@ -1,0 +1,707 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+/* Theme và plugin của người dùng nằm trong content/, mà content/themes/* và
+   content/plugins/* đều bị .gitignore loại ra — cơ chế tự dò nguồn của
+   Tailwind v4 BỎ QUA mọi đường dẫn bị gitignore. Hệ quả đã đo được thật:
+   các class chỉ xuất hiện trong theme (sm:py-32, lg:py-32, min-h-[38rem]…)
+   hoàn toàn vắng mặt trong CSS xuất ra, nên theme hiển thị sai bố cục.
+   Trước đây lỗi này bị che vì @source ở dòng trên vô tình quét cả view Blade
+   ĐÃ BIÊN DỊCH — tức là CSS đúng hay sai phụ thuộc vào việc trang đó đã từng
+   được mở trước lúc build hay chưa. Khai báo @source tường minh ở đây quét
+   bất kể .gitignore và không phụ thuộc thứ tự. */
+@source '../../content/themes/**/*.blade.php';
+@source '../../content/plugins/**/*.blade.php';
+
+/*
+ * Design tokens — minimalist shadcn/ui token system, brand colors pulled
+ * from mamxanhdigital.vn (orange #f97316 primary, green #2e7d32 as the
+ * spot brand accent, Nunito/Mulish type pairing).
+ */
+:root {
+    --background: #ffffff;
+    --foreground: #111827;
+
+    --card: #ffffff;
+    --card-foreground: #111827;
+
+    --popover: #ffffff;
+    --popover-foreground: #111827;
+
+    --primary: #f97316;
+    --primary-foreground: #ffffff;
+
+    --secondary: #f3f4f6;
+    --secondary-foreground: #111827;
+
+    --brand-green: #2e7d32;
+    --brand-green-foreground: #ffffff;
+
+    --muted: #f3f4f6;
+    --muted-foreground: #6b7280;
+
+    --accent: #fff7ed;
+    --accent-foreground: #9a3412;
+
+    --destructive: #dc2626;
+    --destructive-foreground: #ffffff;
+
+    --border: #e5e7eb;
+    --input: #e5e7eb;
+    --ring: #f97316;
+
+    --radius: 0.75rem;
+
+    /* Font mặc định (trang quản trị). Trang public ghi đè 2 biến này qua
+       `.theme-public` — xem ghi chú trong khối `@theme inline` bên dưới. */
+    --sans-family: 'Mulish', ui-sans-serif, system-ui, sans-serif;
+    --heading-family: 'Nunito', ui-sans-serif, system-ui, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --background: #09090b;
+        --foreground: #fafafa;
+
+        --card: #18181b;
+        --card-foreground: #fafafa;
+
+        --popover: #18181b;
+        --popover-foreground: #fafafa;
+
+        --primary: #f97316;
+        --primary-foreground: #ffffff;
+
+        --secondary: #27272a;
+        --secondary-foreground: #fafafa;
+
+        --brand-green: #4ade80;
+        --brand-green-foreground: #09090b;
+
+        --muted: #27272a;
+        --muted-foreground: #a1a1aa;
+
+        --accent: #27272a;
+        --accent-foreground: #fafafa;
+
+        --destructive: #f87171;
+        --destructive-foreground: #09090b;
+
+        --border: #27272a;
+        --input: #27272a;
+        --ring: #f97316;
+    }
+}
+
+/*
+ * Trang public — bộ token riêng, tách khỏi :root dùng chung với trang quản
+ * trị (2026-08-26, thiết kế lại từ đầu theo storytelling — chỉ giữ lại 2
+ * màu thương hiệu thật `--primary`/`--brand-green`, mọi thứ khác đổi mới).
+ * Áp dụng qua class `.theme-public` trên <body> của theme public
+ * (layout.blade.php) — KHÔNG đụng tới giao diện trang quản trị, vốn vẫn
+ * dùng đúng token gray trung tính ở :root phía trên.
+ *
+ * Font: Newsreader (chương/tiêu đề/trích dẫn — serif kể chuyện, có italic
+ * thật) + Be Vietnam Pro (nội dung/UI — sans hiện đại của 1 foundry Việt
+ * Nam, chọn có chủ đích vì đây là thương hiệu Việt, không phải font "an
+ * toàn" kiểu Inter). Nền tông xanh-xám rất nhạt (không phải cream — cream
+ * + cam dễ rơi vào công thức thiết kế AI hay dùng) — gắn với tên thương
+ * hiệu "Mầm Xanh" thay vì trung tính vô cảm.
+ */
+/* Chặn tràn ngang do các section tràn viền: `100vw` TÍNH CẢ chiều rộng
+   thanh cuộn dọc, nên trên desktop có thanh cuộn thì section rộng hơn vùng
+   nội dung ~8-15px → sinh thanh cuộn ngang (bug thật đã đo được, không
+   phải phòng xa). Phải đặt ở CẢ <html> lẫn <body>: chỉ clip ở body thì
+   <html> vẫn `visible` và vẫn cuộn được. Dùng `clip` chứ KHÔNG dùng
+   `hidden` — `hidden` tạo scroll container mới, làm hỏng `position:
+   sticky` của header. `:has()` giới hạn đúng trang public, không đụng
+   trang quản trị. */
+html:has(> body.theme-public) {
+    overflow-x: clip;
+}
+
+.theme-public {
+    overflow-x: clip;
+
+    --background: #f7f9f6;
+    --foreground: #181d18;
+
+    --card: #ffffff;
+    --card-foreground: #181d18;
+
+    --muted: #eef1ec;
+    --muted-foreground: #5c655a;
+
+    --accent: #fdf1e4;
+    --accent-foreground: #9a3412;
+
+    --border: #e2e7e0;
+    --input: #e2e7e0;
+
+    --sans-family: 'Be Vietnam Pro', ui-sans-serif, system-ui, sans-serif;
+    --heading-family: 'Newsreader', ui-serif, Georgia, serif;
+
+    /* PHẢI khai báo lại cả 2 biến này ở đây, không chỉ *-family ở trên:
+       `--font-sans: var(--sans-family)` trong @theme inline được giải ở
+       ngữ cảnh :root, nên nó "đóng băng" thành font của admin (Mulish) rồi
+       kế thừa xuống body — override --sans-family ở .theme-public không
+       chạm tới được. Bug thật đã gặp: body rơi về Mulish (font đã gỡ khỏi
+       Vite) → hiển thị bằng font hệ thống. */
+    --font-sans: var(--sans-family);
+    --font-heading: var(--heading-family);
+}
+@media (prefers-color-scheme: dark) {
+    .theme-public {
+        --background: #12140f;
+        --foreground: #edf1ea;
+
+        --card: #191c16;
+        --card-foreground: #edf1ea;
+
+        --muted: #1f231b;
+        --muted-foreground: #a3ac9d;
+
+        --accent: #241a10;
+        --accent-foreground: #fdba74;
+
+        --border: #2a2f25;
+        --input: #2a2f25;
+    }
+}
+
+@theme inline {
+    /* Trỏ qua 1 biến trung gian thay vì ghi thẳng tên font: `@theme inline`
+       nội suy GIÁ TRỊ vào utility ngay lúc build, nên nếu ghi thẳng
+       'Nunito' ở đây thì mọi override `--font-heading` phía sau (vd
+       `.theme-public`) sẽ không có tác dụng — đúng lỗi đã gặp thật khi
+       đổi font trang public. Cách này giống hệt cách các token màu đang
+       làm (`--color-background: var(--background)`). */
+    --font-sans: var(--sans-family);
+    --font-heading: var(--heading-family);
+
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-brand-green: var(--brand-green);
+    --color-brand-green-foreground: var(--brand-green-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+
+    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+    body {
+        background-color: var(--background);
+        color: var(--foreground);
+        font-family: var(--font-sans);
+    }
+
+    h1, h2, h3, h4 {
+        font-family: var(--font-heading);
+    }
+}
+
+/*
+ * Typography for sanitized rich-text content (blog posts written with
+ * TinyMCE — see PostController::fillAndSave() for the server-side
+ * sanitization step this content already went through).
+ */
+.prose-content {
+    font-size: 1rem;
+    line-height: 1.75;
+    color: var(--foreground);
+}
+.prose-content > :first-child { margin-top: 0; }
+.prose-content > :last-child { margin-bottom: 0; }
+.prose-content p { margin: 1.25em 0; }
+.prose-content h1, .prose-content h2, .prose-content h3,
+.prose-content h4, .prose-content h5, .prose-content h6 {
+    font-family: var(--font-heading);
+    font-weight: 800;
+    margin-top: 1.75em;
+    margin-bottom: 0.6em;
+    line-height: 1.3;
+}
+.prose-content h1 { font-size: 1.75em; }
+.prose-content h2 { font-size: 1.4em; }
+.prose-content h3 { font-size: 1.2em; }
+.prose-content ul, .prose-content ol {
+    margin: 1.25em 0;
+    padding-left: 1.5em;
+}
+.prose-content ul { list-style: disc; }
+.prose-content ol { list-style: decimal; }
+.prose-content li { margin: 0.4em 0; }
+.prose-content a {
+    color: var(--primary);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+.prose-content blockquote {
+    margin: 1.5em 0;
+    padding: 0.25em 1.25em;
+    border-left: 3px solid var(--primary);
+    background: var(--accent);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    color: var(--foreground);
+    font-style: italic;
+}
+.prose-content blockquote p { margin: 0.5em 0; }
+.prose-content code {
+    background: var(--muted);
+    color: var(--foreground);
+    padding: 0.15em 0.4em;
+    border-radius: var(--radius-sm);
+    font-size: 0.875em;
+}
+.prose-content pre {
+    background: var(--muted);
+    padding: 1em;
+    border-radius: var(--radius-md);
+    overflow-x: auto;
+    margin: 1.5em 0;
+}
+.prose-content pre code {
+    background: none;
+    padding: 0;
+}
+.prose-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--radius-md);
+    margin: 1.5em 0;
+    border: 1px solid var(--border);
+}
+.prose-content hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 2em 0;
+}
+
+/*
+ * Collapsible admin sidebar (desktop only, >=1024px matches Tailwind's
+ * `lg:` breakpoint) — toggled by #sidebar-collapse-toggle in
+ * layouts/admin.blade.php, state persisted in localStorage
+ * (`mxd_sidebar_collapsed`) and reapplied by resources/js/admin.js.
+ * Mobile keeps its existing full-width open/close overlay behavior
+ * untouched — this only ever applies at the sticky-sidebar breakpoint.
+ */
+@media (min-width: 1024px) {
+    .sidebar-collapsed #sidebar {
+        width: 4.5rem;
+    }
+    .sidebar-collapsed #sidebar .sidebar-label {
+        display: none;
+    }
+    .sidebar-collapsed #sidebar .nav-item,
+    .sidebar-collapsed #sidebar .nav-group-toggle {
+        justify-content: center;
+        padding-left: 0;
+        padding-right: 0;
+    }
+    .sidebar-collapsed #sidebar .user-block {
+        flex-direction: column;
+        gap: 0.5rem;
+        padding-left: 0;
+        padding-right: 0;
+    }
+}
+/*
+ * Trang public — bộ tiện ích cho thiết kế storytelling (2026-08-26, viết
+ * lại hoàn toàn từ đầu; bộ glass/mesh/gradient cũ đã gỡ bỏ theo yêu cầu).
+ * Nguyên tắc: chữ dẫn dắt, khoảng trắng dẫn dắt — không dùng khối card đổ
+ * bóng chồng chất. `color-mix()` đọc thẳng từ token nên tự thích ứng
+ * dark mode, không cần viết override riêng.
+ */
+
+/* Section tràn viền — thoát khỏi container 1440px của trang. */
+.section-bleed {
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    overflow-x: hidden;
+}
+
+/*
+ * "Sân khấu" ảnh — ảnh thật phủ kín làm nền, chữ và thẻ dữ liệu nổi đè
+ * lên trên (ngôn ngữ thị giác theo đúng bộ ảnh tham khảo người dùng gửi:
+ * ảnh đời thật + thẻ kính mờ nổi chứa số liệu thật). Lớp phủ tối chỉ đủ
+ * để chữ trắng luôn đạt tương phản đọc được, không làm chết ảnh.
+ */
+.stage {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+}
+.stage > img,
+.stage > picture > img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -2;
+}
+/* Lớp phủ 2 hướng: dọc (đáy đậm) + NGANG (trái đậm). Lớp ngang là bắt
+   buộc, không phải trang trí — chữ nằm ở nửa trái, mà ảnh thật thường có
+   chi tiết rối/sáng đúng chỗ đó (đã gặp thật: tiêu đề đè lên mặt người,
+   gần như không đọc được). Lớp ngang đảm bảo vùng đặt chữ luôn đủ tương
+   phản bất kể chọn ảnh nào sau này. */
+.stage::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    /* Mobile: chỉ phủ dọc. Màn hình hẹp thì lớp phủ ngang "tối bên trái"
+       trùm gần hết bề ngang → ảnh bị dìm gần như đen hoàn toàn (đã thấy
+       thật khi test ở 375px). */
+    background: linear-gradient(to top, rgb(0 0 0 / 0.62) 0%, rgb(0 0 0 / 0.3) 55%, rgb(0 0 0 / 0.32) 100%);
+}
+/* Desktop: thêm lớp phủ ngang để vùng đặt chữ (nửa trái) luôn đủ tương
+   phản, còn nửa phải vẫn thấy rõ ảnh và các thẻ dữ liệu nổi. */
+@media (min-width: 1024px) {
+    .stage::after {
+        background:
+            linear-gradient(to right, rgb(0 0 0 / 0.82) 0%, rgb(0 0 0 / 0.55) 45%, rgb(0 0 0 / 0.15) 100%),
+            linear-gradient(to top, rgb(0 0 0 / 0.55) 0%, rgb(0 0 0 / 0.2) 50%, rgb(0 0 0 / 0.25) 100%);
+    }
+}
+/* Biến thể sân khấu chữ CĂN GIỮA. Lớp phủ ngang "tối bên trái" ở trên
+   được thiết kế cho bố cục chữ nằm nửa trái (hero). Nếu dùng lại nguyên
+   vẹn cho section căn giữa thì chữ chạy từ vùng rất tối sang vùng gần
+   như trong suốt → tương phản lệch hẳn, mép phải khó đọc. Ở đây phủ đều
+   2 bên và dồn độ đậm vào giữa. */
+.stage-center::after {
+    /* Mobile: vẫn chỉ phủ dọc — cộng thêm lớp ngang ở màn hẹp sẽ dìm gần
+       hết khung ảnh (tổng độ tối ~0.7), mất luôn phần ảnh muốn khoe. */
+    background: linear-gradient(to top, rgb(0 0 0 / 0.6) 0%, rgb(0 0 0 / 0.38) 55%, rgb(0 0 0 / 0.45) 100%);
+}
+@media (min-width: 1024px) {
+    .stage-center::after {
+        background:
+            linear-gradient(to right, rgb(0 0 0 / 0.4) 0%, rgb(0 0 0 / 0.6) 50%, rgb(0 0 0 / 0.4) 100%),
+            linear-gradient(to top, rgb(0 0 0 / 0.5) 0%, rgb(0 0 0 / 0.25) 50%, rgb(0 0 0 / 0.4) 100%);
+    }
+}
+/* Chữ trên sân khấu luôn sáng, ở CẢ 2 theme — nền là ảnh tối, không phải
+   nền theo token, nên cố tình không dùng --foreground ở đây. */
+.stage-content {
+    position: relative;
+    color: #fff;
+}
+.stage-content .text-muted-foreground,
+.stage-content .stage-dim {
+    color: rgb(255 255 255 / 0.75);
+}
+/* Mốc chương trên nền ảnh tối: số chương gốc chỉ là cam 16% (hợp trên nền
+   sáng) → gần như vô hình trên ảnh. Tăng độ tương phản riêng cho .stage,
+   không đụng các chương nền sáng. */
+.stage-content .chapter-number {
+    color: rgb(255 255 255 / 0.28);
+}
+.stage-content .chapter-rule {
+    background: linear-gradient(to right, rgb(255 255 255 / 0.6), transparent);
+}
+
+/*
+ * Thẻ dữ liệu kính mờ nổi — dùng đè lên .stage. Cố tình KHÔNG dùng lại
+ * tên `.glass` cũ đã gỡ: thẻ này chỉ tồn tại trên nền ảnh tối (nên tint
+ * trắng cố định, không đổi theo theme), khác hẳn `.glass` cũ vốn dùng
+ * khắp nơi trên nền sáng.
+ */
+.data-card {
+    background: rgb(255 255 255 / 0.12);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    border: 1px solid rgb(255 255 255 / 0.22);
+    border-radius: 1.25rem;
+    box-shadow: 0 18px 40px -20px rgb(0 0 0 / 0.55);
+    color: #fff;
+}
+.data-card-label {
+    font-size: 0.72rem;
+    letter-spacing: 0.02em;
+    color: rgb(255 255 255 / 0.72);
+}
+.data-card-value {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1;
+}
+/* Chip nhỏ trong thẻ (kiểu "Low HRV" / "Data-driven fuel" ở ảnh mẫu). */
+.data-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: rgb(0 0 0 / 0.35);
+    border: 1px solid rgb(255 255 255 / 0.15);
+    border-radius: 9999px;
+    padding: 0.25rem 0.7rem;
+    font-size: 0.68rem;
+    color: rgb(255 255 255 / 0.88);
+}
+
+/* Thẻ nổi trôi nhẹ — biên độ rất nhỏ, chỉ đủ tạo cảm giác "nổi" như bộ
+   ảnh mẫu, không gây mất tập trung khi đọc. */
+@media (prefers-reduced-motion: no-preference) {
+    .data-float {
+        animation: data-float 7s ease-in-out infinite;
+    }
+    .data-float-slow {
+        animation: data-float 9s ease-in-out infinite;
+        animation-delay: -3s;
+    }
+}
+@keyframes data-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-9px); }
+}
+
+/* Số chương — chữ số lớn mờ làm mốc thị giác cho mỗi chương, thay cho
+   badge/eyebrow kiểu marketing thường thấy. */
+.chapter-number {
+    font-family: var(--font-heading);
+    font-size: clamp(3.5rem, 9vw, 7rem);
+    font-weight: 600;
+    line-height: 0.8;
+    color: color-mix(in srgb, var(--primary) 16%, transparent);
+    letter-spacing: -0.03em;
+}
+
+/* Đường kẻ chương — vạch ngang mảnh mở đầu mỗi chương. */
+.chapter-rule {
+    height: 1px;
+    background: linear-gradient(to right, color-mix(in srgb, var(--primary) 60%, transparent), transparent);
+}
+
+/* Chữ dẫn mở đầu — cỡ lớn, giãn dòng rộng, dùng cho các đoạn kể chuyện
+   chính (khác hẳn body text thường). */
+.lede {
+    font-family: var(--font-heading);
+    font-size: clamp(1.25rem, 2.2vw, 1.75rem);
+    line-height: 1.55;
+    font-weight: 400;
+}
+
+/* Chữ cái đầu đoạn phóng to — thủ pháp kinh điển của trang in/tạp chí,
+   đặt ngay đoạn mở đầu câu chuyện. */
+.dropcap::first-letter {
+    float: left;
+    font-family: var(--font-heading);
+    font-size: 3.6em;
+    line-height: 0.82;
+    font-weight: 600;
+    padding-right: 0.08em;
+    color: var(--primary);
+}
+
+/* Gạch chân mềm dưới cụm từ nhấn — vẽ bằng gradient, không phải border
+   cứng, để giữ cảm giác viết tay hơn là giao diện phần mềm. */
+.marker {
+    background-image: linear-gradient(to top, color-mix(in srgb, var(--primary) 26%, transparent) 0 38%, transparent 38%);
+    padding-inline: 0.08em;
+}
+
+/* ─── Thẻ nội dung dùng chung cho mọi trang danh sách ───────────────────
+   Cùng một ngôn ngữ với trang chủ: không khung nặng, chỉ ảnh + khoảng
+   trắng + đường kẻ. Gom vào CSS thay vì rải class Tailwind ở 6 template
+   để sửa 1 chỗ là đổi cả site. */
+.card-media {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius);
+    background: var(--muted);
+}
+.card-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.entry-card:hover .card-media img,
+a.card-media:hover img {
+    transform: scale(1.04);
+}
+/* Ảnh trống: không dùng emoji phóng to (nhìn như lỗi tải ảnh) mà dùng
+   một mảng màu thương hiệu rất nhạt, im lặng và có chủ đích. */
+.card-media-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+        radial-gradient(120% 120% at 20% 0%, color-mix(in oklab, var(--primary) 12%, transparent) 0%, transparent 60%),
+        var(--muted);
+    color: color-mix(in oklab, var(--primary) 55%, transparent);
+}
+.entry-card {
+    display: flex;
+    flex-direction: column;
+}
+.entry-card h3 a,
+.entry-card h2 a {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-size: 0% 1px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    transition: background-size 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.entry-card:hover h3 a,
+.entry-card:hover h2 a {
+    background-size: 100% 1px;
+}
+/* Nhãn nhỏ dùng lại ở eyebrow, meta, chip lọc — chuẩn hoá 1 chỗ. */
+.eyebrow {
+    font-family: var(--font-sans);
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--muted-foreground);
+}
+/* Chip lọc (danh mục, loại nội dung) — trạng thái bật dùng nền primary
+   nhạt chứ không đảo màu, để không "hét" trên trang đọc dài. */
+.filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    padding: 0.375rem 0.875rem;
+    font-family: var(--font-sans);
+    font-size: 0.8125rem;
+    color: var(--muted-foreground);
+    transition: color 0.2s, border-color 0.2s, background-color 0.2s;
+    white-space: nowrap;
+}
+.filter-chip:hover {
+    color: var(--foreground);
+    border-color: color-mix(in oklab, var(--primary) 45%, transparent);
+}
+/* Trạng thái bật: tín hiệu nằm ở NỀN + VIỀN cam, còn chữ giữ màu
+   foreground. Dùng chính --primary (#f97316) làm màu chữ trên nền tint chỉ
+   đạt 2.41:1 — đo thật, dưới ngưỡng AA 4.5:1 cho cỡ chữ 13px. Cách này
+   vẫn nhận ra ngay chip nào đang chọn mà chữ đạt ~14.7:1. */
+.filter-chip[aria-current='true'],
+.filter-chip.is-active {
+    color: var(--foreground);
+    border-color: color-mix(in oklab, var(--primary) 55%, transparent);
+    background: color-mix(in oklab, var(--primary) 10%, transparent);
+    font-weight: 600;
+}
+/* Thanh chip cuộn ngang trên mobile — ẩn scrollbar nhưng VẪN cuộn được
+   bằng vuốt/trackpad, không dùng overflow:hidden. */
+.chip-row {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 0.25rem;
+}
+.chip-row::-webkit-scrollbar { display: none; }
+
+/* Khối "trống rỗng" dùng chung — nói rõ vì sao trống và lối đi tiếp,
+   thay vì một câu cụt lủn trong khung xám. */
+.empty-state {
+    border-top: 1px solid var(--border);
+    padding: 4rem 0;
+    text-align: center;
+}
+
+/* Hiệu ứng hiện dần khi cuộn tới — giữ lại từ bản trước vì vẫn đúng ý
+   đồ dẫn dắt mắt người đọc; đã có guard prefers-reduced-motion. */
+.reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1), transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+/* Trễ nhịp theo thứ tự — các phần tử trong 1 nhóm hiện lần lượt chứ
+   không cùng lúc, tạo cảm giác kể chuyện tuần tự. */
+.reveal-stagger > * {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1), transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal-stagger.is-visible > * {
+    opacity: 1;
+    transform: translateY(0);
+}
+.reveal-stagger.is-visible > *:nth-child(2) { transition-delay: 0.12s; }
+.reveal-stagger.is-visible > *:nth-child(3) { transition-delay: 0.24s; }
+.reveal-stagger.is-visible > *:nth-child(4) { transition-delay: 0.36s; }
+.reveal-stagger.is-visible > *:nth-child(5) { transition-delay: 0.48s; }
+
+/* Ảnh hiện dần bằng cách "kéo màn" — dùng cho ảnh lớn trong mạch truyện. */
+.reveal-image img {
+    transform: scale(1.08);
+    transition: transform 1.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal-image.is-visible img {
+    transform: scale(1);
+}
+
+/* Biểu đồ/đường nét vẽ dần — tự vẽ bằng SVG, không dùng thư viện ngoài. */
+.draw-line {
+    stroke-dasharray: 340;
+    stroke-dashoffset: 340;
+    transition: stroke-dashoffset 2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal.is-visible .draw-line {
+    stroke-dashoffset: 0;
+}
+.draw-dot {
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+.reveal.is-visible .draw-dot {
+    opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .reveal, .reveal-stagger > *, .reveal-image img, .draw-line, .draw-dot {
+        opacity: 1 !important;
+        transform: none !important;
+        stroke-dashoffset: 0 !important;
+        transition: none !important;
+    }
+}
+.prose-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5em 0;
+    font-size: 0.9em;
+}
+.prose-content th, .prose-content td {
+    border: 1px solid var(--border);
+    padding: 0.5em 0.75em;
+    text-align: left;
+}
+.prose-content th {
+    background: var(--muted);
+    font-weight: 700;
+}

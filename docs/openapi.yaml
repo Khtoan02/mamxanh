@@ -1,0 +1,45 @@
+openapi: 3.0.3
+info:
+  title: mamxanhdigital API
+  version: "0.1.0"
+  description: >
+    Contract published by the BA/Architect team and consumed by the frontend
+    (TypeScript type generation + MSW mocks) and backend (Laravel route/request
+    validation). Extend this file as endpoints are designed — see
+    docs/ARCHITECTURE.md for the collaboration contract this file is part of.
+servers:
+  - url: http://localhost:8000/api
+    description: Local development
+paths:
+  /user:
+    get:
+      summary: Get the authenticated user
+      security:
+        - sanctumCookie: []
+      responses:
+        "200":
+          description: The current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Not authenticated
+components:
+  securitySchemes:
+    sanctumCookie:
+      type: apiKey
+      in: cookie
+      name: mamxanhdigital_session
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+      required: [id, name, email]

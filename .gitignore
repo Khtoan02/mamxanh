@@ -1,0 +1,45 @@
+*.log
+.DS_Store
+.env
+.env.backup
+.env.production
+.phpactor.json
+.phpunit.result.cache
+/.codex
+/.cursor/
+/.idea
+/.nova
+/.phpunit.cache
+/.vscode
+/.zed
+/auth.json
+/node_modules
+# /public/build CỐ Ý KHÔNG bị ignore.
+# Đây là CSS/JS đã biên dịch. Web server KHÔNG cần Node.js để chạy site,
+# nhưng @vite() ở chế độ production đọc public/build/manifest.json — thiếu
+# file này thì Laravel ném "Vite manifest not found" và 500 ngay cả ở trang
+# /install (đã tái hiện thật bằng một bản clone sạch từ GitHub).
+# Vì host chỉ pull code chứ không chạy npm, thư mục này phải nằm trong repo.
+# => Sau khi sửa CSS/JS: BẮT BUỘC chạy `npm run build` rồi mới commit.
+/public/vendor
+/public/fonts-manifest.dev.json
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
+/vendor
+_ide_helper.php
+Homestead.json
+Homestead.yaml
+Thumbs.db
+
+# Nội dung của người cài đặt — KHÔNG thuộc mã nguồn lõi.
+# Giữ lại khung thư mục (.gitkeep + README) để bản phát hành có sẵn chỗ,
+# nhưng theme/plugin/ảnh mà người dùng tự thêm thì không bao giờ commit.
+/content/themes/*
+/content/plugins/*
+/content/uploads/*
+!/content/themes/.gitkeep
+!/content/plugins/.gitkeep
+!/content/uploads/.gitkeep
+

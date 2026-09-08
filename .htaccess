@@ -1,0 +1,39 @@
+# ─── Chế độ shared hosting ────────────────────────────────────────────────
+# File này CHỈ có tác dụng khi document root trỏ thẳng vào thư mục gốc của
+# MXD CMS — tức khi bạn giải nén toàn bộ vào public_html vì host không cho
+# đổi document root.
+#
+# Nếu host của bạn trỏ được document root vào thư mục public/ thì hãy làm
+# vậy: đó là cách an toàn hơn, và file này khi đó không bao giờ được đọc tới.
+#
+# Cách hoạt động: mọi request được viết lại vào public/, nên PHP chỉ bao giờ
+# chạy đúng một file vào (public/index.php) — y hệt khi trỏ document root
+# vào public/. Đường dẫn tài nguyên như /build/app.css cũng tự khớp.
+
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    RewriteEngine On
+
+    # Giữ lại header Authorization (một số host lược mất)
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Chặn thẳng, KHÔNG viết lại: các đường dẫn không bao giờ được phép truy
+    # cập từ web. Lớp rewrite bên dưới thực ra đã đủ chặn, nhưng nếu một bản
+    # cập nhật host nào đó làm hỏng rewrite thì đây là lớp bảo vệ thứ hai —
+    # thứ đang bị lộ ở đây là mật khẩu CSDL, nên không tiếc một lớp dư.
+    RewriteRule ^(app|bootstrap|config|database|resources|routes|storage|tests|vendor|content/plugins)/ - [F,L]
+    RewriteRule ^(\.env|\.env\..*|composer\.(json|lock)|package(-lock)?\.json|artisan|phpunit\.xml|vite\.config\.js) - [F,L]
+
+    # Mọi thứ còn lại: viết lại vào public/
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+# Chặn cả khi mod_rewrite tắt (Apache 2.4)
+<FilesMatch "^(\.env.*|composer\.(json|lock)|package(-lock)?\.json|artisan|phpunit\.xml)$">
+    Require all denied
+</FilesMatch>
