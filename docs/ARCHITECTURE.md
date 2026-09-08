@@ -19,7 +19,7 @@
 
 Trình cài đặt web 4 bước tại `/install` (đã hoàn thành, đã khoá bằng `install.lock` trên site hiện tại):
 
-1. **System Pre-flight Check** — kiểm tra PHP >= 8.2, extension bắt buộc, quyền ghi `storage/`, `bootstrap/cache`.
+1. **System Pre-flight Check** — kiểm tra PHP >= 8.3, extension bắt buộc, quyền ghi `storage/`, `bootstrap/cache`.
 2. **Database Configuration** — nhập host/port/database/username/password/table prefix, nút "Test Connection", tự ghi `.env` + chạy `migrate`.
 3. **Site & Admin Initialization** — site title, tagline, ngôn ngữ, múi giờ, tạo tài khoản Super Admin đầu tiên.
 4. **Lock & Completion** — ghi `storage/app/install.lock`; middleware `EnsureAppIsInstalled` chặn `/install` sau khi khoá.

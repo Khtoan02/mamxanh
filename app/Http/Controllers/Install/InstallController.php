@@ -236,7 +236,7 @@ class InstallController extends Controller
         // Đọc từ config/mxd.php — một nguồn sự thật duy nhất cho yêu cầu hệ
         // thống, thay vì lặp lại con số ở README, preflight và composer.json
         // rồi để chúng lệch nhau qua thời gian.
-        $minPhp = config('mxd.requires.php', '8.2.0');
+        $minPhp = config('mxd.requires.php', '8.3.0');
         $phpOk = version_compare(PHP_VERSION, $minPhp, '>=');
         $checks[] = [
             'label' => 'PHP >= '.$minPhp,

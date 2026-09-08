@@ -9,7 +9,7 @@ không cần dòng lệnh. Tối ưu sẵn cho SEO và Google.
 
 | Thành phần | Tối thiểu |
 |---|---|
-| PHP | 8.2 |
+| PHP | 8.3 |
 | MySQL / MariaDB | 5.7 / 10.3 |
 | Apache | `mod_rewrite` bật (hoặc Nginx có cấu hình tương đương) |
 | Extension | `pdo_mysql`, `mbstring`, `json`, `curl`, `openssl`, `zip`, `xml`, và `gd` hoặc `imagick` |

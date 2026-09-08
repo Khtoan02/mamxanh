@@ -14,8 +14,13 @@ return [
 
     // Yêu cầu tối thiểu — trình cài đặt kiểm tra đúng những con số này chứ
     // không viết lại ở nơi khác.
+    //
+    // PHP 8.3 chứ KHÔNG phải 8.2: laravel/framework v13 khai báo `php: ^8.3`
+    // trong composer.json. Trước đây chỗ này ghi 8.2 nên preflight cho qua
+    // một máy chủ PHP 8.2, người dùng cài xong mới gặp lỗi nghiêm trọng —
+    // đúng kiểu hỏng tệ nhất: bộ kiểm tra bảo "đạt" rồi sản phẩm vẫn chết.
     'requires' => [
-        'php' => '8.2.0',
+        'php' => '8.3.0',
         'mysql' => '5.7.0',
     ],
 
