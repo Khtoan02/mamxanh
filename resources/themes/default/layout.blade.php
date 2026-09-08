@@ -103,6 +103,11 @@
             $navLinks[] = ['label' => 'Giới thiệu', 'url' => route('post.show', $aboutPage->slug), 'active' => request()->is('gioi-thieu')];
         }
 
+        // Cho plugin thêm/bớt mục menu mà không phải sửa theme lõi. Nếu ghi
+        // cứng link ở đây thì mọi website cài CMS này cũng mọc thêm mục đó —
+        // trong khi nó chỉ đúng với một site cụ thể.
+        $navLinks = apply_filters('mxd_nav_links', $navLinks);
+
         $socialLinks = collect([
             'facebook' => env('SITE_FACEBOOK_URL'),
             'message-circle' => env('SITE_ZALO_URL'),

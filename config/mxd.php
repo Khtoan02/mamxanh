@@ -22,6 +22,14 @@ return [
     'requires' => [
         'php' => '8.3.0',
         'mysql' => '5.7.0',
+
+        // Trình cài đặt kiểm tra đúng danh sách này, và trang giới thiệu
+        // cũng đọc chính nó — bảng "Yêu cầu hệ thống" không bao giờ lệch với
+        // thứ preflight thật sự kiểm tra.
+        'extensions' => ['pdo_mysql', 'mbstring', 'json', 'curl', 'openssl', 'zip', 'xml'],
+
+        // Chỉ cần MỘT trong hai để xử lý ảnh.
+        'image_extensions' => ['gd', 'imagick'],
     ],
 
     // CỐ Ý không có lời gọi hàm nào trong file này — kể cả base_path().

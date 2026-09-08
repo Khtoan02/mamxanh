@@ -230,7 +230,7 @@ class InstallController extends Controller
      */
     private function runPreflightChecks(): array
     {
-        $requiredExtensions = ['pdo_mysql', 'mbstring', 'json', 'curl', 'openssl', 'zip', 'xml'];
+        $requiredExtensions = config('mxd.requires.extensions', []);
         $checks = [];
 
         // Đọc từ config/mxd.php — một nguồn sự thật duy nhất cho yêu cầu hệ

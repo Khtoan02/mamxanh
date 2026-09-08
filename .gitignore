@@ -43,3 +43,10 @@ Thumbs.db
 !/content/plugins/.gitkeep
 !/content/uploads/.gitkeep
 
+
+# Plugin riêng của site này (trang giới thiệu + tải bộ mã nguồn mở). Cùng lý
+# do như theme ở trên: là mã nguồn của repo này, và phải KHÔNG bị ignore thì
+# Tailwind mới quét được class dùng trong đó.
+# scripts/publish-core.sh loại toàn bộ content/plugins/* nên nó không bao giờ
+# đi vào bản phát hành công khai.
+!/content/plugins/mxd-download/

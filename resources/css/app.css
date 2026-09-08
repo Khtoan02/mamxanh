@@ -152,9 +152,22 @@ html:has(> body.theme-public) {
        Vite) → hiển thị bằng font hệ thống. */
     --font-sans: var(--sans-family);
     --font-heading: var(--heading-family);
+
+    /* Cam thương hiệu #f97316 trên chữ trắng chỉ đạt 2,80:1 — dưới xa mức
+       4,5:1 của WCAG AA cho chữ thường (đã đo thật trên nút tải). Nút NỀN
+       ĐẶC cần một sắc đậm hơn, vẫn cùng họ cam nên không lạc nhận diện.
+       Chỉ dùng cho nền đặc; chữ/viền màu primary trên nền sáng vẫn giữ
+       #f97316 vì ở đó tương phản tính theo nền trang, không phải nền nút. */
+    --primary-solid: #c2410c;          /* 5,18:1 với chữ trắng */
+    --primary-solid-foreground: #ffffff;
 }
 @media (prefers-color-scheme: dark) {
     .theme-public {
+        /* Nền tối thì nút cam đậm chìm vào trang. Đảo lại: nền cam sáng +
+           chữ tối, đạt 8,04:1 và nổi rõ trên nền tối. */
+        --primary-solid: #fb923c;
+        --primary-solid-foreground: #1c1917;
+
         --background: #12140f;
         --foreground: #edf1ea;
 
@@ -523,6 +536,23 @@ html:has(> body.theme-public) {
     background-image: linear-gradient(to top, color-mix(in srgb, var(--primary) 26%, transparent) 0 38%, transparent 38%);
     padding-inline: 0.08em;
 }
+
+/* Nút hành động nền đặc. Cố ý KHÔNG dùng `bg-primary text-white` trực tiếp:
+   cặp đó không đạt chuẩn tương phản (xem ghi chú ở --primary-solid). */
+.btn-solid {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    border-radius: 999px;
+    padding: 0.875rem 1.75rem;
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    font-weight: 600;
+    background: var(--primary-solid);
+    color: var(--primary-solid-foreground);
+    transition: opacity 0.2s;
+}
+.btn-solid:hover { opacity: 0.9; }
 
 /* ─── Thẻ nội dung dùng chung cho mọi trang danh sách ───────────────────
    Cùng một ngôn ngữ với trang chủ: không khung nặng, chỉ ảnh + khoảng
